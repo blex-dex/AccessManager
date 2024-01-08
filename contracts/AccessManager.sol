@@ -10,6 +10,7 @@ import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Time} from "@openzeppelin/contracts/utils/types/Time.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @dev AccessManager is a central contract to store the permissions of a system.
@@ -58,7 +59,7 @@ import {Time} from "@openzeppelin/contracts/utils/types/Time.sol";
  * mindful of the danger associated with functions such as {{Ownable-renounceOwnership}} or
  * {{AccessControl-renounceRole}}.
  */
-contract AccessManager is Context, Multicall, IAccessManager {
+contract AccessManager is Context, Multicall, Initializable, IAccessManager {
     using Time for *;
 
     // Structure that stores the details for a target contract.
@@ -117,7 +118,7 @@ contract AccessManager is Context, Multicall, IAccessManager {
         _;
     }
 
-    constructor(address initialAdmin) {
+    function initialize(address initialAdmin) public initializer {
         if (initialAdmin == address(0)) {
             revert AccessManagerInvalidInitialAdmin(address(0));
         }
@@ -553,55 +554,7 @@ contract AccessManager is Context, Multicall, IAccessManager {
         }
     }
 
-    /// @inheritdoc IAccessManager
-    // Reentrancy is not an issue because permissions are checked on msg.sender. Additionally,
-    // _consumeScheduledOp guarantees a scheduled operation is only executed once.
-    // slither-disable-next-line reentrancy-no-eth
     function execute(
-        address target,
-        bytes calldata data
-    ) public payable virtual returns (uint32) {
-        address caller = _msgSender();
-
-        // Fetch restrictions that apply to the caller on the targeted function
-        (bool immediate, uint32 setback) = _canCallExtended(
-            caller,
-            target,
-            data
-        );
-
-        // If caller is not authorised, revert
-        if (!immediate && setback == 0) {
-            revert AccessManagerUnauthorizedCall(
-                caller,
-                target,
-                _checkSelector(data)
-            );
-        }
-
-        bytes32 operationId = hashOperation(caller, target, data);
-        uint32 nonce;
-
-        // If caller is authorised, check operation was scheduled early enough
-        // Consume an available schedule even if there is no currently enforced delay
-        if (setback != 0 || getSchedule(operationId) != 0) {
-            nonce = _consumeScheduledOp(operationId);
-        }
-
-        // Mark the target and selector as authorised
-        bytes32 executionIdBefore = _executionId;
-        _executionId = _hashExecutionId(target, _checkSelector(data));
-
-        // Perform call
-        Address.functionCallWithValue(target, data, msg.value);
-
-        // Reset execute identifier
-        _executionId = executionIdBefore;
-
-        return nonce;
-    }
-
-    function execute2(
         address caller,
         address target,
         bytes calldata data
@@ -612,9 +565,7 @@ contract AccessManager is Context, Multicall, IAccessManager {
             target,
             data
         );
-
         // If caller is not authorised, revert
-        //没有授权
         if (!immediate && setback == 0) {
             revert AccessManagerUnauthorizedCall(
                 caller,
@@ -626,20 +577,20 @@ contract AccessManager is Context, Multicall, IAccessManager {
         bytes32 operationId = hashOperation(caller, target, data);
         uint32 nonce;
 
-        if (caller != msgsender) {
-            (bool isAdmin, ) = hasRole(ADMIN_ROLE, msgsender);
-            (bool isGuardian, ) = hasRole(
-                getRoleGuardian(getTargetFunctionRole(target, selector)),
-                msgsender
+        require(caller != msgsender);
+
+        (bool isAdmin, ) = hasRole(ADMIN_ROLE, msgsender);
+        (bool isGuardian, ) = hasRole(
+            getRoleGuardian(getTargetFunctionRole(target, selector)),
+            msgsender
+        );
+        if ((!isAdmin && !isGuardian) || setback == 0) {
+            revert AccessManagerUnauthorizedCancel(
+                msgsender,
+                caller,
+                target,
+                selector
             );
-            if (!isAdmin && !isGuardian) {
-                revert AccessManagerUnauthorizedCancel(
-                    msgsender,
-                    caller,
-                    target,
-                    selector
-                );
-            }
         }
 
         if (setback != 0 || getSchedule(operationId) != 0) {
