@@ -560,12 +560,14 @@ contract AccessManager is Context, Multicall, Initializable, IAccessManager {
         bytes calldata data
     ) public payable returns (uint32) {
         address msgsender = _msgSender();
+        //setback==0: 即时角色
+        //setback!=0: 延时角色
         (bool immediate, uint32 setback) = _canCallExtended(
             caller,
             target,
             data
         );
-        // If caller is not authorised, revert
+        // If caller is not authorised, revert. 如果没有权限, 报错
         if (!immediate && setback == 0) {
             revert AccessManagerUnauthorizedCall(
                 caller,
@@ -584,7 +586,10 @@ contract AccessManager is Context, Multicall, Initializable, IAccessManager {
             getRoleGuardian(getTargetFunctionRole(target, selector)),
             msgsender
         );
+
+        // 只有管理员和监护人可以执行提案
         if ((!isAdmin && !isGuardian) || setback == 0) {
+            //即时角色不能运行
             revert AccessManagerUnauthorizedCancel(
                 msgsender,
                 caller,
@@ -593,7 +598,9 @@ contract AccessManager is Context, Multicall, Initializable, IAccessManager {
             );
         }
 
+        // 如果是延时角色 || 当前提案 id 没有过期 && 当前提案存在
         if (setback != 0 || getSchedule(operationId) != 0) {
+            // 这里会检查提案是否合法, 不合法则会报错
             nonce = _consumeScheduledOp(operationId);
         }
 
@@ -673,10 +680,13 @@ contract AccessManager is Context, Multicall, Initializable, IAccessManager {
         uint32 nonce = _schedules[operationId].nonce;
 
         if (timepoint == 0) {
+            // 提案不存在
             revert AccessManagerNotScheduled(operationId);
         } else if (timepoint > Time.timestamp()) {
+            // 提案还没到时间
             revert AccessManagerNotReady(operationId);
         } else if (_isExpired(timepoint)) {
+            // 提案已经过期
             revert AccessManagerExpired(operationId);
         }
 
