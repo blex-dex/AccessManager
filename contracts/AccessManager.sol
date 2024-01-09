@@ -586,10 +586,16 @@ contract AccessManager is Context, Multicall, Initializable, IAccessManager {
             getRoleGuardian(getTargetFunctionRole(target, selector)),
             msgsender
         );
+        if (!isAdmin && !isGuardian) {
+            revert AccessManagerUnauthorizedCancel(
+                msgsender,
+                caller,
+                target,
+                selector
+            );
+        }
 
-        // 只有管理员和监护人可以执行提案
-        if ((!isAdmin && !isGuardian) || setback == 0) {
-            //即时角色不能运行
+        if (setback == 0) {
             revert AccessManagerUnauthorizedCancel(
                 msgsender,
                 caller,
