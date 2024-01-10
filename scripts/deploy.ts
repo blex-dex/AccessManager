@@ -6,8 +6,15 @@ async function main() {
   const [owner] = await ethers.getSigners();
   // console.log(await owner.getAddress())
   const AccessManager = await ethers.getContractFactory("AccessManager", owner);
-
-  const upgradeProxy = await upgrades.deployProxy(AccessManager, ['0xdFfe013991993bC3Cc2C5Bc01d44C7d2e2F65ab6'], { initializer: "initialize", initialOwner: '0xdFfe013991993bC3Cc2C5Bc01d44C7d2e2F65ab6' });
+  const signerAddress = await owner.getAddress();
+  const upgradeProxy = await upgrades.deployProxy(
+    AccessManager,
+    [signerAddress],
+    {
+      initializer: "initialize",
+      initialOwner: signerAddress
+    }
+  );
   await upgradeProxy.waitForDeployment();
   console.log(await upgradeProxy.getAddress());
 

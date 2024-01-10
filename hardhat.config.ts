@@ -14,11 +14,16 @@ require("dotenv").config()
 const config: HardhatUserConfig = {
   solidity: "0.8.20",
   networks: {
-    sepolia: {
+    arbitrum_42161: {
+      url: "https://arbitrum.llamarpc.com",
+      chainId: 42161,
+      accounts: [process.env.TestnetPrivateKey!]
+    },
+    sepolia_421614: {
       url: "https://arbitrum-sepolia.blockpi.network/v1/rpc/public",
       // url: "https://arb-goerli.g.alchemy.com/v2/demo",
       chainId: 421614,
-      accounts: [process.env.TestnetPrivateKey!],
+      accounts: [process.env.TestnetPrivateKey!]
       // gas: 8000000,
       // gasPrice: 25000000000,
       // subgraphName: "arbitrum-sepolia",
@@ -27,18 +32,15 @@ const config: HardhatUserConfig = {
       // url: "https://fantom-testnet.public.blastapi.io",
       url: "https://fantom-testnet.public.blastapi.io	",
       chainId: 4002,
-      accounts: [
-        process.env.TestnetPrivateKey!,
-      ]
-    },
+      accounts: [process.env.TestnetPrivateKey!]
+    }
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
-  },
+    apiKey: process.env.ETHERSCAN_API_KEY
+  }
   // sourcify: {
   //   enabled: true
   // }
-
-}
+};
 
 export default config;
