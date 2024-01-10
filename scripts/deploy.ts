@@ -21,7 +21,6 @@ async function main() {
     });
   }
   await verify();
-  //await upgradeProxy.initialize('0xdFfe013991993bC3Cc2C5Bc01d44C7d2e2F65ab6');
 }
 
 
