@@ -7,7 +7,8 @@ const IMMEDIATE_TIME = 0;
 
 async function main() {
   const [owner] = await ethers.getSigners();
-  const addressJsonNetwork = addressJson[process.env.HARDHAT_NETWORK];
+  const hardhatNetworkName = process.env.HARDHAT_NETWORK as string;
+  const addressJsonNetwork = addressJson[hardhatNetworkName];
   // console.log(ethers.keccak256(toUtf8Bytes("setTokensPerInterval(uint256)")).substring(0, 10))
   // console.log(ethers.keccak256(toUtf8Bytes("setAPR(uint256)")).substring(0, 10))
   const AccessManager = await ethers.getContractAt(
