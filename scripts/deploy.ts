@@ -16,22 +16,20 @@ async function main() {
     }
   );
   await upgradeProxy.waitForDeployment();
-  console.log(await upgradeProxy.getAddress());
-
-  function verify() {
-    return new Promise(function () {
-      setTimeout(async () => {
-        await hre.run("verify", {
-          address: await upgradeProxy.getAddress()
-        })
-      }, 10000)
-    });
-  }
-  await verify();
+  console.log("AccessManager Address", await upgradeProxy.getAddress());
+  await verify(await upgradeProxy.getAddress());
 }
 
+async function verify(contractAddress: string) {
+  return new Promise(function () {
+    setTimeout(async () => {
+      await hre.run("verify", {
+        address: contractAddress
+      })
+    }, 10000)
+  });
+}
 
-// await verify();
 
 main().catch((error) => {
   console.error(error);
