@@ -553,63 +553,59 @@ contract AccessManager is Context, Multicall, Initializable, IAccessManager {
         }
     }
 
+    /**
+     * @dev Only guardians and administrators can execute proposals submitted by the proposed caller
+     */
     function execute(
         address caller,
         address target,
         bytes calldata data
-    ) public payable returns (uint32) {
+    ) public payable returns (uint32 nonce) {
         address msgsender = _msgSender();
-        //setback==0: 即时角色
-        //setback!=0: 延时角色
+
+        // setback==0: Immediate role
+        // setback!=0: Delayed role
         (bool immediate, uint32 setback) = _canCallExtended(
             caller,
             target,
             data
         );
-        // If caller is not authorised, revert. 如果没有权限, 报错
-        if (!immediate && setback == 0) {
-            revert AccessManagerUnauthorizedCall(
-                caller,
-                target,
-                _checkSelector(data)
-            );
-        }
+
         bytes4 selector = _checkSelector(data);
         bytes32 operationId = hashOperation(caller, target, data);
-        uint32 nonce;
-
-        require(caller != msgsender);
 
         (bool isAdmin, ) = hasRole(ADMIN_ROLE, msgsender);
         (bool isGuardian, ) = hasRole(
             getRoleGuardian(getTargetFunctionRole(target, selector)),
             msgsender
         );
-        if (!isAdmin && !isGuardian) {
-            revert AccessManagerUnauthorizedCancel(
-                msgsender,
+
+        // Charlie@2024-01-12: Remove caller == msgsender check
+        if (setback == 0 || (!isAdmin && !isGuardian))
+            // setback==0 includes two cases
+            // 1. caller is not the proposer
+            // 2. No immediate roles can call exec
+            //
+            // !isAdmin && !isGuardian
+            // 1. Not an administrator
+            // 2. Not a guardian
+            revert AccessManagerUnauthorizedCall(
                 caller,
                 target,
-                selector
+                _checkSelector(data)
             );
-        }
 
-        if (setback == 0) {
-            revert AccessManagerUnauthorizedCancel(
-                msgsender,
-                caller,
-                target,
-                selector
-            );
-        }
-
-        // 如果是延时角色 || 当前提案 id 没有过期 && 当前提案存在
-        if (setback != 0 || getSchedule(operationId) != 0) {
-            // 这里会检查提案是否合法, 不合法则会报错
+        // If the current proposal id has not expired and the current proposal exists
+        if (getSchedule(operationId) != 0) {
+            // 3 error scenarios
+            // 1. Proposal does not exist
+            // 2. Proposal is not yet due
+            // 3. Proposal has expired
+            // This will check if the proposal is valid, and if not, an error will be thrown
             nonce = _consumeScheduledOp(operationId);
         }
 
-        // Mark the target and selector as authorised
+        // Mark the target and selector as authorized
         bytes32 executionIdBefore = _executionId;
         _executionId = _hashExecutionId(target, _checkSelector(data));
 
@@ -618,8 +614,6 @@ contract AccessManager is Context, Multicall, Initializable, IAccessManager {
 
         // Reset execute identifier
         _executionId = executionIdBefore;
-
-        return nonce;
     }
 
     /// @inheritdoc IAccessManager
