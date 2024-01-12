@@ -119,9 +119,8 @@ contract AccessManager is Context, Multicall, Initializable, IAccessManager {
     }
 
     function initialize(address initialAdmin) public initializer {
-        if (initialAdmin == address(0)) {
+        if (initialAdmin == address(0))
             revert AccessManagerInvalidInitialAdmin(address(0));
-        }
 
         // admin is active immediately and without any execution delay.
         _grantRole(ADMIN_ROLE, initialAdmin, 0, 0);
@@ -889,4 +888,6 @@ contract AccessManager is Context, Multicall, Initializable, IAccessManager {
     ) private pure returns (bytes32) {
         return keccak256(abi.encode(target, selector));
     }
+
+    uint256[50] private ______gap;
 }
