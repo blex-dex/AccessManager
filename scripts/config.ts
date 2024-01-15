@@ -5,7 +5,7 @@ const addressJson: { [key: string]: AccessManagerAdminConfig } = {
     scheduler: "0x0909F6Fec8E2CB1Aea67B20Efaf31F91b66E88ca",
     rewardDistributor: "0x54c14Fa76eeD09897F09d06580b3add70793CF19",
     vaultReward: "0xBC1502aF0B7bDD34A9631a9A1F6f7773467d2862",
-    accessManager: "0x00"
+    accessManager: "0x8A732C47dcd5E8Fbe1693F94F187f4D523c1A9F5"
   },
   "ftmTest": {
     boss: "0x1B6dCB68Ea6C83993D445E2e26b8BA495A2A3bbD",
