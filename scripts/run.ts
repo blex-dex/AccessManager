@@ -9,9 +9,9 @@ async function main() {
     const [owner] = await ethers.getSigners();
     const addressJsonNetwork = addressJson[network.name];
     const AccessManager = await ethers.getContractAt(
-        "AccessManager",
-        addressJsonNetwork.accessManager,
-        owner
+      "AccessManagerUpgradeable",
+      addressJsonNetwork.accessManager,
+      owner
     );
     await handleTx(AccessManager.grantRole(
         roleIDJson.scheduler,
