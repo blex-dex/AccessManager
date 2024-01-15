@@ -5,7 +5,7 @@ import hre, { ethers, upgrades } from "hardhat";
 async function main() {
   const [owner] = await ethers.getSigners();
   // console.log(await owner.getAddress())
-  const AccessManager = await ethers.getContractFactory("AccessManager", owner);
+  const AccessManager = await ethers.getContractFactory("AccessManagerUpgradeable", owner);
   const signerAddress = await owner.getAddress();
   const upgradeProxy = await upgrades.deployProxy(
     AccessManager,
