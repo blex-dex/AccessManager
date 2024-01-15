@@ -8,11 +8,11 @@ require("dotenv").config()
 const config: HardhatUserConfig = {
   solidity: "0.8.20",
   networks: {
-    arbitrum_42161: {
-      // url: "https://arbitrum.llamarpc.com",
-      url: "https://rpc.tenderly.co/fork/e7e63c36-9f7e-487d-be0c-662eb3ea146a",
+    arbitrum_42161_prod: {
+      url: "https://arbitrum.llamarpc.com",
+      //url: "https://rpc.tenderly.co/fork/e7e63c36-9f7e-487d-be0c-662eb3ea146a",
       chainId: 42161,
-      accounts: [process.env.ProductionPrivateKey!]
+      accounts: [process.env.ProdPrivateKey!]
     },
     sepolia_421614: {
       url: "https://arbitrum-sepolia.blockpi.network/v1/rpc/public",
@@ -32,10 +32,10 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY
+  },
+  sourcify: {
+    enabled: true
   }
-  // sourcify: {
-  //   enabled: true
-  // }
 };
 
 export default config;
