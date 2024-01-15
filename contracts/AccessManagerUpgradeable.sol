@@ -940,4 +940,6 @@ contract AccessManagerUpgradeable is
     ) private pure returns (bytes32) {
         return keccak256(abi.encode(target, selector));
     }
+
+    uint256[50] private ______gap;
 }
